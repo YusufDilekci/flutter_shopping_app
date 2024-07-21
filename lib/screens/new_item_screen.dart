@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shopping_app/data/categories.dart';
 import 'package:shopping_app/model/category.dart';
 import 'package:shopping_app/model/item.dart';
+import 'package:http/http.dart' as http;
 
 class NewItemScreen extends StatefulWidget{
   const NewItemScreen({super.key});
@@ -18,18 +21,29 @@ class _NewItemScreenState extends State<NewItemScreen> {
   var _enteredName = '';
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.vegetables]!;
+  final Uri url = Uri.https('flutter-shopping-f4696-default-rtdb.firebaseio.com', 'shopping_list.json');
 
-  void _saveItem() {
+  
+
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      Navigator.of(context).pop(
-        Item(
-          id: DateTime.now().toString(),
-          name: _enteredName,
-          quantity: _enteredQuantity,
-          category: _selectedCategory,
-        ),
+      
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-type': 'application/json',
+        },
+        body: json.encode(
+          {
+            'name':_enteredName,
+            'quantity':_enteredQuantity,
+            'category': _selectedCategory.title
+          },
+        )
       );
+      
+      Navigator.of(context).pop();
     }
   }
 
@@ -60,12 +74,9 @@ class _NewItemScreenState extends State<NewItemScreen> {
                   return null;
                 },
                 onSaved: (value) {
-                  // if (value == null) {
-                  //   return;
-                  // }
                   _enteredName = value!;
                 },
-              ), // instead of TextField()
+              ), 
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [

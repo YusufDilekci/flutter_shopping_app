@@ -1,34 +1,49 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shopping_app/model/item.dart';
 import 'package:shopping_app/screens/new_item_screen.dart';
+import 'package:http/http.dart' as http;
 
 class GroceryScreen extends StatefulWidget{
   const GroceryScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() {
+  State<GroceryScreen> createState() {
     return _GroceryScreenState();
   }
 
 }
 
 class _GroceryScreenState extends State<GroceryScreen>{
-  final List<Item> _groceryItems = [];
-
-  void _addItem() async {
-    final newItem = await Navigator.of(context).push<Item>(
+  List<Item> _groceryItems = [];
+  final Uri url = Uri.https('flutter-shopping-f4696-default-rtdb.firebaseio.com', 'shopping_list.json');
+  
+  @override
+  void initState() {
+    super.initState();
+    _getItems();
+  }
+  
+  void _getItems() async{
+    final List<Item> _items = [];
+    final response = await http.get(url);
+    final data = json.decode(response.body) as Map<String, dynamic>;
+    data.forEach((key, value) {
+      _items.add(Item.fromJson(value, key));
+    });
+    setState(() {
+      _groceryItems = _items;
+    });    
+  }
+  
+  void _addItem(){
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => const NewItemScreen(),
       ),
     );
 
-    if (newItem == null) {
-      return;
-    }
-
-    setState(() {
-      _groceryItems.add(newItem);
-    });
   }
 
   void _deleteItem(int index){
@@ -45,29 +60,24 @@ class _GroceryScreenState extends State<GroceryScreen>{
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Sepetiniz hiçbir ürün bulunmamaktadır')
+            Text('Sepetinizde hiçbir ürün bulunmamaktadır')
         ],),
       );
     }
     else{
       content =  ListView.builder(
         itemCount: _groceryItems.length,
-        itemBuilder: (ctx, index) => ListTile(
-          title: Text(_groceryItems[index].name),
-          leading: Container(
-            width: 24,
-            height: 24,
-            color: _groceryItems[index].category.color,
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_groceryItems[index].quantity.toString()),
-              IconButton(
-                onPressed: () => _deleteItem(index),
-                icon: const Icon(Icons.delete),
-              ),
-            ],
+        itemBuilder: (ctx, index) => Dismissible(
+          onDismissed: (direction) => _deleteItem(index),
+          key: ValueKey(_groceryItems[index].id),
+          child: ListTile(
+            title: Text(_groceryItems[index].name),
+            leading: Container(
+              width: 24,
+              height: 24,
+              color: _groceryItems[index].category.color,
+            ),
+            trailing:Text(_groceryItems[index].quantity.toString()),
           ),
         ),
 

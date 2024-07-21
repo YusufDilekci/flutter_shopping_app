@@ -18,4 +18,11 @@ class Category{
 
   final String title;
   final Color color;
+
+    factory Category.fromJson(Map<String, dynamic> json) {
+      return Category(
+        json['title'],
+        Color(json['color']),
+      );
+  }
 }
