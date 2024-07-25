@@ -17,7 +17,6 @@ class GroceryScreen extends StatefulWidget{
 
 class _GroceryScreenState extends State<GroceryScreen>{
   List<Item> _groceryItems = [];
-  final Uri url = Uri.https('flutter-shopping-f4696-default-rtdb.firebaseio.com', 'shopping_list.json');
   
   @override
   void initState() {
@@ -26,6 +25,8 @@ class _GroceryScreenState extends State<GroceryScreen>{
   }
   
   void _getItems() async{
+    final Uri url = Uri.https('flutter-shopping-f4696-default-rtdb.firebaseio.com', 'shopping_list.json');
+
     final List<Item> _items = [];
     final response = await http.get(url);
     final data = json.decode(response.body) as Map<String, dynamic>;
@@ -37,19 +38,26 @@ class _GroceryScreenState extends State<GroceryScreen>{
     });    
   }
   
-  void _addItem(){
-    Navigator.of(context).push(
+  void _addItem() async{
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (ctx) => const NewItemScreen(),
       ),
     );
 
+    _getItems();
   }
 
-  void _deleteItem(int index){
-    setState(() {
-      _groceryItems.removeAt(index);
-    });
+  void _deleteItem(int index) async{
+    final Uri url = Uri.https('flutter-shopping-f4696-default-rtdb.firebaseio.com', 'shopping_list/${_groceryItems[index].id}.json');
+    final response = await http.delete(url);
+    
+    if (response.statusCode == 200) {
+      setState(() {
+        _groceryItems.removeAt(index);
+      });
+    } 
+
   }
   @override
   Widget build(BuildContext context) {

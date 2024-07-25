@@ -43,7 +43,7 @@ class _NewItemScreenState extends State<NewItemScreen> {
         )
       );
       
-      Navigator.of(context).pop();
+      Navigator.pop(context);
     }
   }
 
